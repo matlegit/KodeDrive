@@ -1,5 +1,6 @@
 import click
 import cli_syncthing_adapter
+# import cli_watchman_adapter
 import os, time, math
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])

@@ -2,9 +2,38 @@ import json
 import os
 import platform
 import subprocess
+import sys
+import traceback
 
+
+def changes(since_list):
+
+  if since_list:
+
+    modified = []
+
+    for i, val in enumerate(since_list):
+      
+      file_name = val['name']
+      parts = file_name.split('.') # type list
+
+      # if not a temporary Syncthing file  
+      if not (parts[0] == '' and parts[1] == 'syncthing' or 
+              parts[-1] in ('swp', 'tmp')):
+        modified.append(file_name)
+
+    if modified:
+      for i, val in enumerate(modified):
+        print val
+
+      return True
+
+  else:
+    print 'No files modified.'
+    return False
 
 def get_watchman():
+
   ###################
   # TODO: Packaging #
   ###################
@@ -35,38 +64,11 @@ def since(path, tag):
   since_cmd = "watchman since --no-pretty %s n:%s" % (path, tag)
   stdout = subprocess.check_output(since_cmd.split())
 
-  if stdout:
-    # check if valid
-    print 'Since valid!'
-
-  else:
+  if not stdout:
     raise IOError("Watchman Since failed.")
 
   output = json.loads(stdout)
-  
-  if not output['files']:
-    return 'No files modifed.' 
  
-  # *** Integrate this with cli_syncthing_adapter.py and cli.py ***
-  # modified = []
-  #
-  # for i, val in enumerate(output['files']):
-  #   
-  #   file_name = val['name']
-  #   parts = file_name.split('.') # type list
-  #
-  #   # if not a temporary Syncthing file  
-  #   if not (parts[0] == '' and parts[1] == 'syncthing' or 
-  #           parts[-1] in ('swp', 'tmp')):
-  #     modified.append(file_name)
-  #
-  # if modified:
-  #   for i, val in enumerate(modified):
-  #     print val
-  #   
-  # # Sync those files
-  #   subprocess.call("kdr push %s" % path, shell = True)   
-  
   return output['files'] # type: list
 
 
@@ -106,6 +108,7 @@ def trigger_ls(path):
   return
 
 def watch(path):
+
   path = os.path.abspath(path)
   path = path.rstrip('/')
   watch_cmd = "watchman watch-project %s" % path
@@ -118,21 +121,20 @@ def watch(path):
     
     try:
       if output['watch'] != path:
-        raise IOError("Watchman failed to watch %s" %  path)
+        raise IOError("Is Watchman watching %s ?" %  path)
 
     except KeyError:
       raise ValueError("Failed to read stdout json")
 
-    except IOError:
-      # For debugging 
-      print path
-      print output['watch']
-      raise IOError("Watchman watch-project failed.")
-      
+    except IOError as e:
+      traceback.print_exc(file = sys.stdout)
+      sys.exit(0)
+
   else:
     raise IOError("Watchman watch-project failed.")
 
-  print "Watching %s ..." % path
+  # Remove this in production
+  print "Watching %s\n" % path
   return
 
 def watch_rm(path):
@@ -155,11 +157,23 @@ def watch_ls():
   else:
     raise IOError("Failed to get watch list")
 
-def in_watch_list(watch_list):
+def in_watch_list(path, watch_list = None):
  
-  for i, val in enumerate(output['roots']):
-    if val != path:
-      raise IOError("Watchman failed to add %s" %  path)
+  found = False
+  path = os.path.abspath(path)
+
+  if not watch_list:
+    watch_list = watch_ls()
+
+  for i, val in enumerate(watch_list['roots']):
+    if val == path:
+      found = True
+      break
+
+  if found:
+    return True 
+
+  return False
 
 def shutdown():
   subprocess.call("watchman shutdown-server", shell = True)

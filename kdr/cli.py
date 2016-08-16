@@ -379,12 +379,21 @@ def test(arg):
   # click.echo(arg)
 
   path = arg
+
   watchman.watch(path)
-  print watchman.watch_ls()
-  print watchman.since(path, "blah")
 
+  watch_list = watchman.watch_ls()
 
+  if not watchman.in_watch_list(path, watch_list):
+    print 'Not in watch watch_list\n'
 
+  else:
+    print 'In watch_list\n'
+
+  since = watchman.since(path, "blah")
+
+  if watchman.changes(since):
+    print since
 
 
 

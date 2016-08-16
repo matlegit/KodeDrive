@@ -376,8 +376,6 @@ def push(**kwargs):
 def test(arg):
   ''' Test random functions :) '''
   
-  # click.echo(arg)
-
   path = arg
 
   watchman.watch(path)
@@ -385,7 +383,8 @@ def test(arg):
   watch_list = watchman.watch_ls()
 
   if not watchman.in_watch_list(path, watch_list):
-    print 'Not in watch watch_list\n'
+    print 'Not in watch_list\n'
+    return
 
   else:
     print 'In watch_list\n'
@@ -393,7 +392,7 @@ def test(arg):
   since = watchman.since(path, "blah")
 
   if watchman.changes(since):
-    print since
+    print  
 
 
 

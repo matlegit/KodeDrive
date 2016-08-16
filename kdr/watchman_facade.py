@@ -29,6 +29,7 @@ def changes(since_list):
       return True
 
   else:
+    # Remove print statement in production
     print 'No files modified.'
     return False
 
@@ -68,11 +69,10 @@ def since(path, tag):
     raise IOError("Watchman Since failed.")
 
   output = json.loads(stdout)
- 
   return output['files'] # type: list
 
-
 def trigger(path):
+  
   # *** TODO: How to call direct command? ***  
   trig_cmd = "watchman -- trigger %s pyfiles '*' -- %/strig.sh" % (path, path)
   
@@ -111,24 +111,20 @@ def watch(path):
 
   path = os.path.abspath(path)
   path = path.rstrip('/')
-  watch_cmd = "watchman watch-project %s" % path
+  watch_cmd = "watchman watch %s" % path
   
   # Init watchman
   stdout = subprocess.check_output(watch_cmd.split())
-  
+
   if stdout:
     output = json.loads(stdout)
     
     try:
-      if output['watch'] != path:
+      if output['watch'] != path: # and output['relative_path'] != os.path.basename(path):
         raise IOError("Is Watchman watching %s ?" %  path)
 
     except KeyError:
       raise ValueError("Failed to read stdout json")
-
-    except IOError as e:
-      traceback.print_exc(file = sys.stdout)
-      sys.exit(0)
 
   else:
     raise IOError("Watchman watch-project failed.")
@@ -166,7 +162,7 @@ def in_watch_list(path, watch_list = None):
     watch_list = watch_ls()
 
   for i, val in enumerate(watch_list['roots']):
-    if val == path:
+    if val == path or val in path:
       found = True
       break
 

@@ -1,6 +1,6 @@
 import click
 import cli_syncthing_adapter
-# import cli_watchman_adapter
+import watchman_facade as watchman
 import os, time, math
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -371,6 +371,24 @@ def push(**kwargs):
         else:
           break
 
+@main.command()
+@click.argument('arg', nargs=1)
+def test(arg):
+  ''' Test random functions :) '''
+  
+  # click.echo(arg)
+
+  path = arg
+  watchman.watch(path)
+  print watchman.watch_ls()
+  print watchman.since(path, "blah")
+
+
+
+
+
+
+
 
 """
 REFERENCE
@@ -442,8 +460,7 @@ def test(arg):
   ''' Test random functions :) '''
 
   cli_syncthing_adapter.test(arg)
-
-Syncthing's scan currently seems buggy
+  Syncthing's scan currently seems buggy
 
 
 """

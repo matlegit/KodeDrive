@@ -1,9 +1,13 @@
 import json
+import os
 import platform
 import subprocess
 
 
 def get_watchman():
+  ###################
+  # TODO: Packaging #
+  ###################
 
   system = platform.system()
 
@@ -15,7 +19,7 @@ def get_watchman():
   # Mac OSX
   elif system == "Darwin":
     # subprocess.call("brew update; brew install watchman", shell = True) 
-    # What if they don't have brew? 
+    # TODO: What if they don't have brew? 
     pass
 
   # elif system == "Windows":
@@ -28,7 +32,7 @@ def get_watchman():
 
 def since(path, tag):
 
-  # since_cmd = "watchman since --no-pretty %s n:%s" % (path, tag)
+  since_cmd = "watchman since --no-pretty %s n:%s" % (path, tag)
   stdout = subprocess.check_output(since_cmd.split())
 
   if stdout:
@@ -43,7 +47,7 @@ def since(path, tag):
   if not output['files']:
     return 'No files modifed.' 
  
-  # *** Integrate this into cli_syncthing_adapter.py and cli.py ***
+  # *** Integrate this with cli_syncthing_adapter.py and cli.py ***
   # modified = []
   #
   # for i, val in enumerate(output['files']):
@@ -63,12 +67,12 @@ def since(path, tag):
   # # Sync those files
   #   subprocess.call("kdr push %s" % path, shell = True)   
   
-  return output['files']
+  return output['files'] # type: list
 
 
 def trigger(path):
-  # *** TODO: Needs more testing ***  
-  # trig_cmd = "watchman -- trigger %s pyfiles '*' -- %/strig.sh" % (path, path)
+  # *** TODO: How to call direct command? ***  
+  trig_cmd = "watchman -- trigger %s pyfiles '*' -- %/strig.sh" % (path, path)
   
   # subprocess.call(trig_cmd + ' > /dev/null', shell = True)
   # stdout = subprocess.check_output(trig_cmd.split())
@@ -88,12 +92,21 @@ def trigger_rm():
   # watchman trigger-del /root triggername
   return
 
-def trigger_ls():
-  # watchman trigger-list /root
+def trigger_ls(path):
+  
+  trig_list_cmd = "watchman trigger-list %s" % path
+  stdout = subprocess.check_output(trig_list_cmd.split())
+
+  if stdout:
+    return json.loads(stdout)
+
+  else:
+    raise IOError("Watchman trigger-list failed.")
+
   return
 
 def watch(path):
-
+  path = os.path.abspath(path)
   path = path.rstrip('/')
   watch_cmd = "watchman watch-project %s" % path
   
@@ -107,23 +120,29 @@ def watch(path):
       if output['watch'] != path:
         raise IOError("Watchman failed to watch %s" %  path)
 
-    except:
-      # print output
-      # print path
-      # print output['watch']
-      raise IOError("Watchman watch-project failed.")
+    except KeyError:
+      raise ValueError("Failed to read stdout json")
 
+    except IOError:
+      # For debugging 
+      print path
+      print output['watch']
+      raise IOError("Watchman watch-project failed.")
+      
   else:
     raise IOError("Watchman watch-project failed.")
-  
+
+  print "Watching %s ..." % path
   return
 
-def watch_rm():
-  # watchman watch-del /path/to/dir
+def watch_rm(path):
+  subprocess.call("watchman watch-del %s > /dev/null" % path, shell = True)
+  # TODO: for testing, check if stdout all matches files previously wtached
   return
 
 def watch_rm_all():
-  # watchman watch-del-all
+  subprocess.call("watchman watch-del-all > /dev/null", shell = True)
+  # TODO: for testing, check if stdout all matches files previously wtached
   return
 
 def watch_ls():
@@ -142,7 +161,7 @@ def in_watch_list(watch_list):
     if val != path:
       raise IOError("Watchman failed to add %s" %  path)
 
-def watchman_shutdown():
+def shutdown():
   subprocess.call("watchman shutdown-server", shell = True)
   return
 

@@ -6,7 +6,7 @@ class WatchmanFacade():
 
   client = pywatchman.client()
 
-### COMMANDS ###
+  ### COMMANDS ###
 
   def shutdown(self):
     self.client("shutdown-server")
@@ -15,7 +15,6 @@ class WatchmanFacade():
   def since(self, path, tag):
 
     path = os.path.abspath(path)
-    
     output = self.client.query("since", "%s" % path, "n:%s" % tag)
 
     if output:
@@ -28,16 +27,16 @@ class WatchmanFacade():
 
   def trigger(self, path):
     
-    # *** TODO: How to call direct command? ***  
+    # *** TODO: How to call direct command? ***
+
+    path = os.path.abspath(path)
     trig_cmd = "watchman -- trigger %s pyfiles '*' -- %/strig.sh" % (path, path)
     
-    # self.client.query() 
+    # output = self.client.query() 
 
     # if output:
-    #   call watchman trigger-list <PATH> and confirm
-    #   for i, val in enumerate(outout['triggers']):
-    #     if val['name'] != device_id:
-    #       raise some error
+    #   return
+
     #
     # else:
     #   raise ValueError("Watchman trigger failed.")
@@ -108,9 +107,12 @@ class WatchmanFacade():
 
     return
 
-### UTIL ###
+  ### UTIL ###
 
-  def changes(self, since_list):
+  def get_changes(self, path = None, tag = None, since_list = None):
+
+    if not since_list:
+      since_list = self.since(path, tag)
 
     if since_list:
       modified = []
@@ -129,12 +131,9 @@ class WatchmanFacade():
         for i, val in enumerate(modified):
           print val
 
-        return True
-
     else:
       # Remove print statement in production
       print 'No files modified.'
-      return False
 
   def in_watch_list(self, path, watch_list = None):
    

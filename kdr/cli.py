@@ -391,8 +391,20 @@ def test(arg):
 
   since = watchman.since(path, "blah")
 
-  if watchman.changes(since):
-    print 'Changes detected'
+  if since:
+    print 'Changes detected:'
+    watchman.get_changes(since_list = since)
+
+  else:
+    print 'No files modified'
+
+  # trigger_list = watchman.trigger_ls()
+  # device_id = ''
+  #
+  # for i, val in enumerate(trigger_list):
+  #   if val['name'] != device_id:
+  #     raise IOError("Failed to add to trigger list")
+ 
 
 """
 REFERENCE

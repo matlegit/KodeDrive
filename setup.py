@@ -19,7 +19,7 @@ def get_data_files():
     return data_files
 
 
-dependencies = ['click', 'requests']
+dependencies = ['click', 'requests', 'pywatchman']
 
 setup(
     name='kdr',

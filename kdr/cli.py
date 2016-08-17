@@ -1,6 +1,6 @@
 import click
 import cli_syncthing_adapter
-import watchman_facade as watchman
+from watchman_facade import WatchmanFacade as watchman_singleton
 import os, time, math
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -375,11 +375,11 @@ def push(**kwargs):
 @click.argument('arg', nargs=1)
 def test(arg):
   ''' Test random functions :) '''
-  
+
   path = arg
-
+  watchman = watchman_singleton()
+  
   watchman.watch(path)
-
   watch_list = watchman.watch_ls()
 
   if not watchman.in_watch_list(path, watch_list):
@@ -392,11 +392,7 @@ def test(arg):
   since = watchman.since(path, "blah")
 
   if watchman.changes(since):
-    print  
-
-
-
-
+    print 'Changes detected'
 
 """
 REFERENCE

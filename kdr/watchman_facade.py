@@ -7,37 +7,13 @@ import pywatchman
 
 class WatchmanFacade():
 
-  # client = None
-
-  # def __init__(self):
   client = pywatchman.client()
 
-  def changes(self, since_list):
+### COMMANDS ###
 
-    if since_list:
-
-      modified = []
-
-      for i, val in enumerate(since_list):
-        
-        file_name = val['name']
-        parts = file_name.split('.') # type list
-
-        # if not a temporary Syncthing file  
-        if not (parts[0] == '' and parts[1] == 'syncthing' or 
-                parts[-1] in ('swp', 'tmp')):
-          modified.append(file_name)
-
-      if modified:
-        for i, val in enumerate(modified):
-          print val
-
-        return True
-
-    else:
-      # Remove print statement in production
-      print 'No files modified.'
-      return False
+  def shutdown(self):
+    self.client("shutdown-server")
+    return
 
   def since(self, path, tag):
 
@@ -53,7 +29,7 @@ class WatchmanFacade():
 
     return
 
-  def trigger(path):
+  def trigger(self, path):
     
     # *** TODO: How to call direct command? ***  
     trig_cmd = "watchman -- trigger %s pyfiles '*' -- %/strig.sh" % (path, path)
@@ -72,11 +48,11 @@ class WatchmanFacade():
     
     return
 
-  def trigger_rm():
+  def trigger_rm(self):
     # watchman trigger-del /root triggername
     return
 
-  def trigger_ls(path):
+  def trigger_ls(self, path):
     
     trig_list_cmd = "watchman trigger-list %s" % path
     stdout = subprocess.check_output(trig_list_cmd.split())
@@ -111,12 +87,12 @@ class WatchmanFacade():
     print "Watching %s\n" % path
     return
 
-  def watch_rm(path):
+  def watch_rm(self, path):
     subprocess.call("watchman watch-del %s > /dev/null" % path, shell = True)
     # TODO: for testing, check if stdout all matches files previously wtached
     return
 
-  def watch_rm_all():
+  def watch_rm_all(self):
     subprocess.call("watchman watch-del-all > /dev/null", shell = True)
     # TODO: for testing, check if stdout all matches files previously wtached
     return
@@ -130,6 +106,36 @@ class WatchmanFacade():
 
     else:
       raise IOError("Failed to get watch list")
+
+ 
+### UTIL ###
+
+  def changes(self, since_list):
+
+    if since_list:
+
+      modified = []
+
+      for i, val in enumerate(since_list):
+        
+        file_name = val['name']
+        parts = file_name.split('.') # type list
+
+        # if not a temporary Syncthing file  
+        if not (parts[0] == '' and parts[1] == 'syncthing' or 
+                parts[-1] in ('swp', 'tmp')):
+          modified.append(file_name)
+
+      if modified:
+        for i, val in enumerate(modified):
+          print val
+
+        return True
+
+    else:
+      # Remove print statement in production
+      print 'No files modified.'
+      return False
 
   def in_watch_list(self, path, watch_list = None):
    
@@ -148,10 +154,6 @@ class WatchmanFacade():
       return True 
 
     return False
-
-  def shutdown():
-    subprocess.call("watchman shutdown-server", shell = True)
-    return
 
 
 

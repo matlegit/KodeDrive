@@ -1,9 +1,6 @@
-import json
 import os
-import subprocess
-import sys
-import traceback
 import pywatchman
+
 
 class WatchmanFacade():
 
@@ -34,10 +31,9 @@ class WatchmanFacade():
     # *** TODO: How to call direct command? ***  
     trig_cmd = "watchman -- trigger %s pyfiles '*' -- %/strig.sh" % (path, path)
     
-    # subprocess.call(trig_cmd + ' > /dev/null', shell = True)
-    # stdout = subprocess.check_output(trig_cmd.split())
-   
-    # if stdout:
+    # self.client.query() 
+
+    # if output:
     #   call watchman trigger-list <PATH> and confirm
     #   for i, val in enumerate(outout['triggers']):
     #     if val['name'] != device_id:
@@ -54,11 +50,10 @@ class WatchmanFacade():
 
   def trigger_ls(self, path):
     
-    trig_list_cmd = "watchman trigger-list %s" % path
-    stdout = subprocess.check_output(trig_list_cmd.split())
+    output = self.client.query("trigger-list %s" % path)
 
-    if stdout:
-      return json.loads(stdout)
+    if output:
+      return output 
 
     else:
       raise IOError("Watchman trigger-list failed.")
@@ -78,7 +73,7 @@ class WatchmanFacade():
           raise IOError("Is Watchman watching %s ?" %  path)
 
       except KeyError:
-        raise ValueError("Failed to read stdout json")
+        raise ValueError("Failed to read output")
 
     else:
       raise IOError("Watchman watch failed.")
@@ -87,14 +82,18 @@ class WatchmanFacade():
     print "Watching %s\n" % path
     return
 
+  # def watch_project():
+  #   include?
+
   def watch_rm(self, path):
-    subprocess.call("watchman watch-del %s > /dev/null" % path, shell = True)
-    # TODO: for testing, check if stdout all matches files previously wtached
+
+    path = os.path.abspath(path)
+    self.client.query("watch-del", path)
+
     return
 
   def watch_rm_all(self):
-    subprocess.call("watchman watch-del-all > /dev/null", shell = True)
-    # TODO: for testing, check if stdout all matches files previously wtached
+    self.client.query("watch-del-all")
     return
 
   def watch_ls(self):
@@ -107,13 +106,13 @@ class WatchmanFacade():
     else:
       raise IOError("Failed to get watch list")
 
- 
+    return
+
 ### UTIL ###
 
   def changes(self, since_list):
 
     if since_list:
-
       modified = []
 
       for i, val in enumerate(since_list):
@@ -154,12 +153,6 @@ class WatchmanFacade():
       return True 
 
     return False
-
-
-
-
-
-
 
 
 

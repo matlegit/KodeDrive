@@ -3,6 +3,9 @@ import cli_syncthing_adapter
 from watchman_facade import WatchmanFacade as watchman_singleton
 import os, time, math
 
+
+watchman = watchman_singleton()
+
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.version_option()
 @click.group(
@@ -377,7 +380,6 @@ def test(arg):
   ''' Test random functions :) '''
 
   path = arg
-  watchman = watchman_singleton()
   
   watchman.watch(path)
   watch_list = watchman.watch_ls()
@@ -392,19 +394,26 @@ def test(arg):
   since = watchman.since(path, "blah")
 
   if since:
-    print 'Changes detected:'
-    watchman.get_changes(since_list = since)
+    print 'Changes detected in:'
+    changes = watchman.get_changes_since(since_list = since)
+
+    if changes:
+      for i, val in enumerate(changes):
+        print val
+
+      print ''
 
   else:
-    print 'No files modified'
+    print 'No files modified\n'
+  
+  trig = watchman.trigger(path) 
+  trigger_list = watchman.trigger_ls(path)
 
-  # trigger_list = watchman.trigger_ls()
-  # device_id = ''
-  #
-  # for i, val in enumerate(trigger_list):
-  #   if val['name'] != device_id:
-  #     raise IOError("Failed to add to trigger list")
- 
+  if watchman.in_trigger_list(trigger_list=trigger_list):
+    print 'Triggered!'
+
+  else: 
+    raise IOError("Failed to add to trigger list")
 
 """
 REFERENCE
